@@ -70,7 +70,7 @@ nextflow run main.nf -with-trace -with-report -with-timeline
 ```
 8) nextflow will copy all relevant output into the directories we set in step 1.
 
-BAM - contains the bam files and teh recalibration statistics
+BAM - contains the bam files and the recalibration statistics
 
 Chr_GenomicsDB - contains the genomic databases
 
