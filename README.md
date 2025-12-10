@@ -1,1 +1,1 @@
-# nextflow_pipeline_for_GATK_SNP_calling
+# Nextflow Pipeline for GATK SNP Calling
