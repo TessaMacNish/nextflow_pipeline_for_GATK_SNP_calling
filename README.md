@@ -74,7 +74,7 @@ BAM - contains the bam files and the recalibration statistics
 
 Chr_GenomicsDB - contains the genomic databases
 
-VCF - contains teh final VCF file
+VCF - contains the final VCF file
 
 VCF/HaplotypeCaller - contains the gVCFs made by HaplotypeCaller
 
@@ -102,13 +102,13 @@ The purpose of the parameters is to make the pipline more flexible, so that the 
 
 `reference` - This is the path to the reference fasta file and index. The defualt is /Genome/Reference/DarmorV10_Chromosomes_Only.fa, these are the other files described in step 6.
 
-`KnownSites` - This is teh path to the known sites vcf used for base recalibration. The defualt is /Genome/known_sites_DarmorV10.sorted.vcf and tehse files are described in step 5.
+`KnownSites` - This is the path to the known sites vcf used for base recalibration. The defualt is /Genome/known_sites_DarmorV10.sorted.vcf and tehse files are described in step 5.
 
 `chr_file` - This is the file that has a list chromosome IDs and is described in step 4. The default file name is chromosomes_DV10.list.
 
-`VCF` - This controls where teh HaplotypeCaller gVCFs are saved. The default is /VCF/HaplotypeCaller
+`VCF` - This controls where the HaplotypeCaller gVCFs are saved. The default is /VCF/HaplotypeCaller
 
-`DB` - This controls where teh genomic databases are saved. The default is /Chr_GenomicsDB
+`DB` - This controls where the genomic databases are saved. The default is /Chr_GenomicsDB
 
 `final_VCF` - This controls where the final VCF is saved. The default is /VCF
 
