@@ -92,6 +92,8 @@ The purpose of the parameters is to make the pipline more flexible, so that the 
 
 `read2_tag` - This controls what nextflow expects the fastq.gz read 2 files to be called. This defualt expects files such as CRR379058_r2.fq.gz but if your read 1 files were instead named such as CRR379058_read2.fq.gz, you could set this parameter to read2 and nextflow would read your files. This pipeline will still assume that your fastq.gz file names start with the sample ID.
 
+`fastq_suffix` - This controls what nextflow expects the fastq.gz suffix to be. The defualt is fq for example CRR379058_r2.fq.gz, However, if your files were named with the suffix fastq.gz , for example, you would set this parameter to fastq.
+
 `QC` - This parameter sets where your cleaned fatsq files are saved. In the above example this would be WGS_Filtered.
 
 `Ref_Abbr` - This controls how multiple output files are named. The default is DV10, which represents an abbreviation of the refernce genome originally used for this pipeline. All output files would then have DV10 in their name. You can change this parameter to be an abbreviation of the reference you use or you can change it to any other identifying string you wish to use for your file names.
