@@ -1,6 +1,7 @@
 params.reads_dir = "data"
 params.read1_tag = "f1"
 params.read2_tag = "r2"
+params.fastq_suffix = "fq"
 params.QC = "${baseDir}/WGS_Filtered"
 params.Ref_Abbr = "DV10"
 params.BAM = "${baseDir}/BAM"
@@ -340,7 +341,7 @@ process MergeVcfs {
     }
 
 workflow {
-    reads = Channel.fromFilePairs("${params.reads_dir}/*_{${params.read1_tag},${params.read2_tag}}.fq.gz", flat: true)
+    reads = Channel.fromFilePairs("${params.reads_dir}/*_{${params.read1_tag},${params.read2_tag}}.${params.fastq_suffix}.gz", flat: true)
     clean_reads = fastp(reads).map { id, r1, r2, qc -> tuple(id, r1, r2) }
     ref_index = file(params.Ref_index + ".*")
     mapped = mapping(clean_reads, ref_index)
