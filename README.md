@@ -2,7 +2,7 @@
 
 ## What does this pipeline do?
 
-This pipline works for paired end fastq.gz files that have already been downloaded. It will clean the files, filter them, map them to a reference, perform base recalibration, call germline SNPs via local re-assembly of haplotypes, create a genomic database, and perform joint genotyping. The tools used in this pipeline are gatk4 version 4.6.1.0, fastp version, 1.0.1, samtools version 1.22.1, and bwa version 0.7.19. 
+This pipline works for paired end fastq.gz files that have already been downloaded. It will clean the files, filter them, map them to a reference, perform base recalibration, call germline SNPs via local re-assembly of haplotypes, create or update a genomic database, and perform joint genotyping. The tools used in this pipeline are gatk4 version 4.6.1.0, fastp version, 1.0.1, samtools version 1.22.1, and bwa version 0.7.19. 
 
 ## Running this pipeline using only default parameters
 
@@ -60,6 +60,8 @@ DarmorV10.dict
 DarmorV10.pac
 DarmorV10.sa
 ```
+6.5) If `updating` a genomics database then have your genomics databases in the Chr_GenomicsDB folder.
+
 7) You can now run nextflow from your working directory.
 ``` bash
 nextflow run main.nf
@@ -72,7 +74,7 @@ nextflow run main.nf -with-trace -with-report -with-timeline
 
 BAM - contains the bam files and the recalibration statistics
 
-Chr_GenomicsDB - contains the genomic databases
+Chr_GenomicsDB - contains the new or updated genomic databases
 
 VCF - contains the final VCF file
 
@@ -116,9 +118,10 @@ The purpose of the parameters is to make the pipline more flexible, so that the 
 
 `vcf_prefix` - This controls how the final VCF is named. The default is Samples_minicore_1-135, which would name the output VCF as Samples_minicore_1-135_whole_genome.DV10.raw.vcf.gz. This parameter changes the prefix for this file name. You can change the DV10 part of the name using the parameter Ref_Abbr.
 
+`DB_status` - When set to "create" will create a new genomics database. Otherwise it will update an existing database.
 
 An example of how to use the parameters when running your nextflow pipeline is below. All other parameters can be used in the same way.
 
 ``` bash
-nextflow run main.nf --read1_tag r1 --read2_tag read2
+nextflow run main.nf --read1_tag r1 --read2_tag read2 --DB_status update
 ```
