@@ -13,6 +13,7 @@ params.VCF = "${baseDir}/VCF/HaplotypeCaller"
 params.DB = "${baseDir}/Chr_GenomicsDB"
 params.final_VCF = "${baseDir}/VCF"
 params.vcf_prefix = "Samples_minicore_1-135"
+params.DB_status = "create"
 
 process fastp {
     container 'community.wave.seqera.io/library/bwa_fastp_gatk4_samtools:b552bdcea7a3515f'
@@ -260,7 +261,7 @@ process HapCall {
     """
     }
 
-process chr_GenomicDB {
+process create_chr_GenomicDB {
     container 'community.wave.seqera.io/library/bwa_fastp_gatk4_samtools:b552bdcea7a3515f'
     publishDir "${params.DB}", mode: 'copy'
 
@@ -285,6 +286,40 @@ process chr_GenomicDB {
 
     # Run GenomicsDBImport for this chromosome only
     gatk --java-options "-Xmx100g -XX:+UseParallelGC" GenomicsDBImport --reader-threads 128 \$GVCF_ARGS --genomicsdb-workspace-path "\$CHR_DB_DIR" -L "${chrom}"
+
+    echo "\$(date) - Finished GenomicsDBImport for chromosome ${chrom}"
+    """
+    }
+
+process update_chr_GenomicDB {
+    container 'community.wave.seqera.io/library/bwa_fastp_gatk4_samtools:b552bdcea7a3515f'
+    publishDir "${params.DB}", mode: 'copy', overwrite: true
+
+    stageInMode 'copy'
+    stageOutMode 'copy'
+
+    input:
+    tuple val(chrom), path(gVCFs), path(chr_db)
+
+    output: 
+    tuple val(chrom), path("${chrom}_DB")
+
+    script:
+    """
+    echo "\$(date) - Starting GenomicsDBImport for chromosome ${chrom}"
+
+    workspace="${chr_db}"
+
+    GVCF_ARGS=""
+    for GVCF_PATH in ${gVCFs}; do
+        if [[ "\$GVCF_PATH" == *.g.vcf.gz ]]; then
+            GVCF_ARGS="\$GVCF_ARGS -V \$GVCF_PATH"
+        fi
+    done
+
+    # Run GenomicsDBImport for this chromosome only
+    gatk --java-options "-Xmx100g -XX:+UseParallelGC" GenomicsDBImport --reader-threads 128 \$GVCF_ARGS --genomicsdb-update-workspace-path "\${workspace}"
+
 
     echo "\$(date) - Finished GenomicsDBImport for chromosome ${chrom}"
     """
@@ -340,7 +375,7 @@ process MergeVcfs {
     """
     }
 
-workflow {
+workflow initial_round {
     reads = Channel.fromFilePairs("${params.reads_dir}/*_{${params.read1_tag},${params.read2_tag}}.${params.fastq_suffix}.gz", flat: true)
     clean_reads = fastp(reads).map { id, r1, r2, qc -> tuple(id, r1, r2) }
     ref_index = file(params.Ref_index + ".*")
@@ -368,8 +403,55 @@ workflow {
           .map { id, chrom, gvcf, tbi -> tuple(chrom, [gvcf, tbi]) }  
           .groupTuple(by: 0)
           .map { chrom, files_list -> tuple(chrom, files_list.flatten()) }
-    database = chr_GenomicDB(DB_inputs)
+    database = create_chr_GenomicDB(DB_inputs)
     chr_vcfs = genotype(database, file(params.reference)).map { chrom, vcf, index -> vcf }
     chr_vcfs.collect().set { all_vcfs }
     MergeVcfs(all_vcfs)
+}
+
+workflow additional_rounds {
+    reads = Channel.fromFilePairs("${params.reads_dir}/*_{${params.read1_tag},${params.read2_tag}}.${params.fastq_suffix}.gz", flat: true)
+    clean_reads = fastp(reads).map { id, r1, r2, qc -> tuple(id, r1, r2) }
+    ref_index = file(params.Ref_index + ".*")
+    mapped = mapping(clean_reads, ref_index)
+    marked_bam = DupValIndx(mapped).map { id, marked, index, metrics, validation ->  tuple(id, marked)}
+    reference_ch = Channel.value(file("${baseDir}/Genome/Reference"))
+    known_sites_ch = Channel.value(file("${baseDir}/Genome"))
+    marked_bam
+          .combine(reference_ch)
+          .combine(known_sites_ch)
+          .set { recal_inputs }
+    recal_bam = recalibrate(recal_inputs).map { id, recal, index, data, val -> tuple(id, recal, data) }
+    recal_bam
+          .combine(reference_ch)
+          .combine(known_sites_ch)
+          .set { BQSR_inputs }
+    BQSR(BQSR_inputs)
+    chromosomes = Channel
+          .fromPath(params.chr_file)
+          .splitText()
+          .map { it.trim() }
+    recal_marked_bam = recal_bam.map { id, recal, data -> tuple(id, recal) }
+    hapcall_inputs = recal_marked_bam.combine(chromosomes)
+    DB_inputs = HapCall(hapcall_inputs, file(params.reference))
+          .map { id, chrom, gvcf, tbi -> tuple(chrom, [gvcf, tbi]) }  
+          .groupTuple(by: 0)
+          .map { chrom, files_list -> tuple(chrom, files_list.flatten()) }
+    chr_db_ch = chromosomes.map { chrom ->
+              tuple(chrom, file("${params.DB}/${chrom}_DB", type: 'dir'))
+    }
+    DB_inputs_with_path = DB_inputs.join(chr_db_ch)
+    database = update_chr_GenomicDB(DB_inputs_with_path)
+    chr_vcfs = genotype(database, file(params.reference)).map { chrom, vcf, index -> vcf }
+    chr_vcfs.collect().set { all_vcfs }
+    MergeVcfs(all_vcfs)
+}
+
+workflow {
+    if (params.DB_status == 'create') {
+          initial_round()
+    }
+    else {
+          additional_rounds()
+    }
 }
