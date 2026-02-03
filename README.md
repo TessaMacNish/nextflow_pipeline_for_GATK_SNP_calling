@@ -2,7 +2,7 @@
 
 ## What does this pipeline do?
 
-This pipline works for paired end fastq.gz files that have already been downloaded. It will clean the files, filter them, map them to a reference, perform base recalibration, call germline SNPs via local re-assembly of haplotypes, create or update a genomic database, and perform joint genotyping. The tools used in this pipeline are gatk4 version 4.6.1.0, fastp version, 1.0.1, samtools version 1.22.1, and bwa version 0.7.19. 
+This pipline works for paired end fastq.gz files that have already been downloaded. It will clean the files, filter them, map them to a reference, perform base recalibration, call germline SNPs via local re-assembly of haplotypes, create or update a genomic database, and perform joint genotyping. The tools used in this pipeline are gatk4 version 4.6.1.0, fastp version, 1.0.1, samtools version 1.22.1, and bwa version 0.7.19. This pipeline submits all individual steps in the pipeline as SLURM scripts.  
 
 ## Running this pipeline using only default parameters
 
