@@ -62,7 +62,16 @@ DarmorV10.sa
 ```
 6.5) If `updating` a genomics database then have your genomics databases in the Chr_GenomicsDB folder.
 
-7) You can now run nextflow from your working directory.
+7) To run this nextflow pipeline you will need sigularity installed. In the nextflow.config file the following line loads singularity.
+``` bash
+beforeScript = 'module load singularity/4.1.0-nompi'
+```
+You will need to change this line to the version of singularity available on your CPU. The above singularity module is available on Pawsey super computer's Setonix server. If a singularity module is not available on your CPU you can install singlarity using conda or another package manager. If using a version of singularity isntalled inside a conda environment you can change the module load line to the example below, ensuring you replace myenv with the name of your conda environment.
+``` bash
+beforeScript = 'conda activate myenv'
+```
+
+8) You can now run nextflow from your working directory.
 ``` bash
 nextflow run main.nf
 ```
@@ -70,7 +79,7 @@ You can run nextflow with the additional parameters if you want better logs and 
 ``` bash
 nextflow run main.nf -with-trace -with-report -with-timeline
 ```
-8) nextflow will copy all relevant output into the directories we set in step 1.
+9) nextflow will copy all relevant output into the directories we set in step 1.
 
 BAM - contains the bam files and the recalibration statistics
 
