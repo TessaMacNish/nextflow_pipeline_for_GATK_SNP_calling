@@ -134,3 +134,4 @@ An example of how to use the parameters when running your nextflow pipeline is b
 ``` bash
 nextflow run main.nf --read1_tag r1 --read2_tag read2 --DB_status update
 ```
+Alternativley, you can change the parameters by editing the main.nf file directly.
