@@ -14,6 +14,7 @@ params.DB = "${baseDir}/Chr_GenomicsDB"
 params.final_VCF = "${baseDir}/VCF"
 params.vcf_prefix = "Samples_minicore_1-135"
 params.DB_status = "create"
+params.DB_prefix = "DV10_"
 
 process fastp {
     container 'community.wave.seqera.io/library/bwa_fastp_gatk4_samtools:b552bdcea7a3515f'
@@ -269,13 +270,13 @@ process create_chr_GenomicDB {
     tuple val(chrom), path(gVCFs)
 
     output: 
-    tuple val(chrom), path("${chrom}_DB")
+    tuple val(chrom), path("${params.DB_prefix}${chrom}_DB")
 
     script:
     """
     echo "\$(date) - Starting GenomicsDBImport for chromosome ${chrom}"
 
-    CHR_DB_DIR="${chrom}_DB"
+    CHR_DB_DIR="${params.DB_prefix}${chrom}_DB"
 
     GVCF_ARGS=""
     for GVCF_PATH in ${gVCFs}; do
@@ -302,7 +303,7 @@ process update_chr_GenomicDB {
     tuple val(chrom), path(gVCFs), path(chr_db)
 
     output: 
-    tuple val(chrom), path("${chrom}_DB")
+    tuple val(chrom), path("${params.DB_prefix}${chrom}_DB")
 
     script:
     """
@@ -438,7 +439,7 @@ workflow additional_rounds {
           .groupTuple(by: 0)
           .map { chrom, files_list -> tuple(chrom, files_list.flatten()) }
     chr_db_ch = chromosomes.map { chrom ->
-              tuple(chrom, file("${params.DB}/${chrom}_DB", type: 'dir'))
+              tuple(chrom, file("${params.DB}/${params.DB_prefix}${chrom}_DB", type: 'dir'))
     }
     DB_inputs_with_path = DB_inputs.join(chr_db_ch)
     database = update_chr_GenomicDB(DB_inputs_with_path)
@@ -446,6 +447,7 @@ workflow additional_rounds {
     chr_vcfs.collect().set { all_vcfs }
     MergeVcfs(all_vcfs)
 }
+
 
 workflow {
     if (params.DB_status == 'create') {
