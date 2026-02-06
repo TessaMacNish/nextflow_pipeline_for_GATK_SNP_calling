@@ -129,6 +129,8 @@ The purpose of the parameters is to make the pipline more flexible, so that the 
 
 `DB_status` - When set to "create" will create a new genomics database. Otherwise it will update an existing database.
 
+'DB_prefix' - This controls what the genomics databases are named. The default is DV10_ and the corresponding chromosome name would be DV10_A01_DB for chromosome A01.
+
 An example of how to use the parameters when running your nextflow pipeline is below. All other parameters can be used in the same way.
 
 ``` bash
