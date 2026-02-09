@@ -5,6 +5,7 @@ params.fastq_suffix = "fq"
 params.QC = "${baseDir}/WGS_Filtered"
 params.Ref_Abbr = "DV10"
 params.BAM = "${baseDir}/BAM"
+params.BAM_name = ""
 params.Ref_index = "${baseDir}/Genome/Reference/DarmorV10"
 params.reference   = "${baseDir}/Genome/Reference/DarmorV10_Chromosomes_Only.fa"
 params.KnownSites = "${baseDir}/Genome/known_sites_DarmorV10.sorted.vcf"
@@ -97,17 +98,17 @@ process DupValIndx {
 
     output: 
     tuple val(id),
-          path("${id}.${params.Ref_Abbr}.marked.bam"),
-          path("${id}.${params.Ref_Abbr}.marked*.bai"),
-          path("${id}.${params.Ref_Abbr}.metrics.txt"),
-          path("${id}.${params.Ref_Abbr}.validation.txt")
+          path("${id}.${params.BAM_name}.${params.Ref_Abbr}.marked.bam"),
+          path("${id}.${params.BAM_name}.${params.Ref_Abbr}.marked*.bai"),
+          path("${id}.${params.BAM_name}.${params.Ref_Abbr}.metrics.txt"),
+          path("${id}.${params.BAM_name}.${params.Ref_Abbr}.validation.txt")
 
     script:
     """
-    DEDUP_BAM="${id}.${params.Ref_Abbr}.marked.bam"
-    METRICS="${id}.${params.Ref_Abbr}.metrics.txt"
-    VALIDATION="${id}.${params.Ref_Abbr}.validation.txt"
-    METRICS_PREFIX="${id}_${params.Ref_Abbr}_mapping_metrics"
+    DEDUP_BAM="${id}.${params.BAM_name}.${params.Ref_Abbr}.marked.bam"
+    METRICS="${id}.${params.BAM_name}.${params.Ref_Abbr}.metrics.txt"
+    VALIDATION="${id}.${params.BAM_name}.${params.Ref_Abbr}.validation.txt"
+    METRICS_PREFIX="${id}_${params.BAM_name}_${params.Ref_Abbr}_mapping_metrics"
 
     echo ""
     echo "Processing sample --> ${id}"
@@ -149,16 +150,16 @@ process recalibrate {
 
     output: 
     tuple val(id),
-          path("${id}.${params.Ref_Abbr}.recal.marked.bam"),
-          path("${id}.${params.Ref_Abbr}.recal.marked*bai"),
-          path("${id}_${params.Ref_Abbr}_Recal_Data.table"),
-          path("${id}.${params.Ref_Abbr}.recal.validation.txt")
+          path("${id}.${params.BAM_name}.${params.Ref_Abbr}.recal.marked.bam"),
+          path("${id}.${params.BAM_name}.${params.Ref_Abbr}.recal.marked*bai"),
+          path("${id}_${params.BAM_name}_${params.Ref_Abbr}_Recal_Data.table"),
+          path("${id}.${params.BAM_name}.${params.Ref_Abbr}.recal.validation.txt")
 
     script:
     """
-    RECAL_TABLE="${id}_${params.Ref_Abbr}_Recal_Data.table"
-    RECAL_BAM="${id}.${params.Ref_Abbr}.recal.marked.bam"
-    VALIDATION="${id}.${params.Ref_Abbr}.recal.validation.txt"
+    RECAL_TABLE="${id}_${params.BAM_name}_${params.Ref_Abbr}_Recal_Data.table"
+    RECAL_BAM="${id}.${params.BAM_name}.${params.Ref_Abbr}.recal.marked.bam"
+    VALIDATION="${id}.${params.BAM_name}.${params.Ref_Abbr}.recal.validation.txt"
 
 
     echo "Started at: \$(date)"
@@ -212,8 +213,8 @@ process BQSR {
 
     output: 
     tuple val(id),
-          path("${id}_${params.Ref_Abbr}_Recal_Data.after.table"),
-          path("${id}_Recalibration.csv")
+          path("${id}_${params.BAM_name}_${params.Ref_Abbr}_Recal_Data.after.table"),
+          path("${id}_${params.BAM_name}_Recalibration.csv")
 
 
     script:
@@ -222,11 +223,11 @@ process BQSR {
     echo "Running second BaseRecalibrator pass for ${id}"
     echo ""
 
-    gatk BaseRecalibrator -R "${params.reference}" -I "${recal_bam}" --known-sites "${params.KnownSites}" -O "${id}_${params.Ref_Abbr}_Recal_Data.after.table"
+    gatk BaseRecalibrator -R "${params.reference}" -I "${recal_bam}" --known-sites "${params.KnownSites}" -O "${id}_${params.BAM_name}_${params.Ref_Abbr}_Recal_Data.after.table"
 
     # Generate the plot
 
-    gatk AnalyzeCovariates -before "${data_table}" -after "${id}_${params.Ref_Abbr}_Recal_Data.after.table" -csv "${id}_Recalibration.csv"
+    gatk AnalyzeCovariates -before "${data_table}" -after "${id}_${params.BAM_name}_${params.Ref_Abbr}_Recal_Data.after.table" -csv "${id}_${params.BAM_name}_Recalibration.csv"
 
     echo ""
     echo "Done with ${id}"
@@ -447,7 +448,6 @@ workflow additional_rounds {
     chr_vcfs.collect().set { all_vcfs }
     MergeVcfs(all_vcfs)
 }
-
 
 workflow {
     if (params.DB_status == 'create') {
